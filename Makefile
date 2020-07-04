@@ -17,7 +17,7 @@ OBJCOPY = arm-none-eabi-objcopy
 LDSCRIPT = $(LINKER_DIR)/stm32f103x8-dfu.ld
 OPENCM3_LIB = $(OPENCM3_DIR)/lib/libopencm3_stm32f1.a
 
-CXXFLAGS += -std=gnu++17 -g0 -Os
+CXXFLAGS += -std=gnu++17 -g0 -O2
 CXXFLAGS += -Wall -Wno-register -Wno-pointer-arith
 CXXFLAGS += -fconcepts -fno-exceptions -fno-rtti
 CXXFLAGS += -fno-common -ffunction-sections -fdata-sections
@@ -33,8 +33,8 @@ CPPFLAGS = -DSTM32F1 -DRCC_LED1=RCC_GPIOC -DPORT_LED1=GPIOC -DPIN_LED1=GPIO13
 
 # ------------------------------
 
-SOURCES = $(shell find $(CORE_DIR) -name "*.cpp")
-HEADERS = $(shell find $(CORE_DIR) -name "*.h")
+SOURCES = $(shell find . $(CORE_DIR) -name "*.cpp")
+HEADERS = $(shell find . $(CORE_DIR) -name "*.h")
 
 CXXFLAGS += -I $(CORE_DIR)/..
 

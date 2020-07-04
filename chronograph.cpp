@@ -5,6 +5,8 @@
 #include <core/usb_vcp.h>
 #include <core/millis.h>
 
+#include "peak.h"
+
 void adc_init() {
 	rcc_periph_clock_enable(RCC_ADC1);
 	rcc_set_adcpre(RCC_CFGR_ADCPRE_PCLK2_DIV2);
@@ -67,12 +69,44 @@ int main() {
 		vcp_printf("time = %u ms\n", t2 - t);
 	} */
 	
-	while(1) {
+	/* while(1) {
 		uint32_t adc_val = adc_read();
 		
 		if(adc_val != last_adc) {
 			vcp_printf("ADC: %u\n", adc_val);
 			last_adc = adc_val;
 		}
+	} */
+	
+	#define PEAK_LAG 64
+	#define PEAK_THRESHOLD 60
+	#define PEAK_TRAINING 4
+	
+	struct peak_stat pstat;
+	uint16_t samples[PEAK_LAG];
+	
+	peak_stat_init(&pstat, PEAK_THRESHOLD, 0, PEAK_LAG, PEAK_TRAINING, samples);
+	
+	/* while(1) {
+		uint16_t adc_val = adc_read();
+		
+		if(peak_detect(&pstat, adc_val))
+			vcp_printf("Peak: %u\n", adc_val);
+	} */
+	
+	while(1) {
+		uint32_t t = millis();
+		
+		for(int i = 0; i < 1000000; i++) {
+			uint16_t adc_val = adc_read();
+			peak_detect(pstat, adc_val);
+			
+			// if(adc_val > 10000000)
+				// vcp_printf("FAKE");
+		}
+		
+		uint32_t t2 = millis();
+		
+		vcp_printf("time = %u ms\n", t2 - t);
 	}
 }
