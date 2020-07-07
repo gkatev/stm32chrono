@@ -31,6 +31,8 @@
 
 #include <stdint.h>
 
+#include <core/usb_vcp.h>
+
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
@@ -39,7 +41,6 @@ struct peak_stat {
 	uint influence;
 	uint lag;
 	
-	uint training;
 	uint elements;
 	uint oldest;
 	
@@ -47,37 +48,52 @@ struct peak_stat {
 	ulong sample_sum;
 };
 
-void peak_stat_init(struct peak_stat *s, uint threshold,
-	uint influence, uint lag, uint training, uint16_t *samples);
-
-void peak_stat_reset(struct peak_stat *s);
-// int peak_detect(struct peak_stat *s, uint16_t value);
-
-inline int peak_detect(struct peak_stat s, uint16_t value) {
-	uint16_t new_value = value;
-	int status = 0;
+inline void peak_stat_init(struct peak_stat &s, uint threshold,
+		uint influence, uint lag, uint16_t *samples) {
 	
-	if(s.elements >= s.training) {
+	s = (struct peak_stat) {
+		.threshold = threshold,
+		.influence = influence,
+		.lag = lag,
+		
+		.elements = 0,
+		.oldest = 0,
+		
+		.samples = samples,
+		.sample_sum = 0
+	};
+}
+
+inline void peak_stat_reset(struct peak_stat &s) {
+	s.elements = 0;
+	s.oldest = 0;
+	s.sample_sum = 0;
+}
+
+inline bool peak_detect(struct peak_stat &s, uint16_t value) {
+	uint16_t new_value = value;
+	bool has_peak = false;
+	
+	if(s.elements == s.lag) {
 		uint16_t average = s.sample_sum / s.elements;
 		
 		if(value > average && (uint)(value - average) > s.threshold) {
 			uint16_t previous = s.samples[(s.oldest + s.lag - 1) % s.lag];
 			new_value = s.influence * value + (1 - s.influence) * previous;
 			
-			status = 1;
+			has_peak = true;
 		}
-	}
-	
-	if(s.elements < s.lag)
+		
+		s.sample_sum -= s.samples[s.oldest];
+	} else
 		s.elements++;
 	
-	s.sample_sum -= s.samples[s.oldest];
 	s.sample_sum += new_value;
 	
 	s.samples[s.oldest] = new_value;
 	s.oldest = (s.oldest + 1) % s.lag;
 	
-	return status;
+	return has_peak;
 }
 
 #endif

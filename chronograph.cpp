@@ -55,8 +55,6 @@ int main() {
 	
 	vcp_printf("Chronograph starting!\n");
 	
-	uint32_t last_adc = 0xFFFFFFFF;
-	
 	/* while(1) {
 		uint32_t t = millis();
 		
@@ -69,7 +67,9 @@ int main() {
 		vcp_printf("time = %u ms\n", t2 - t);
 	} */
 	
-	/* while(1) {
+	/* uint32_t last_adc = 0xFFFFFFFF;
+	
+	while(1) {
 		uint32_t adc_val = adc_read();
 		
 		if(adc_val != last_adc) {
@@ -79,22 +79,28 @@ int main() {
 	} */
 	
 	#define PEAK_LAG 64
-	#define PEAK_THRESHOLD 60
-	#define PEAK_TRAINING 4
+	#define PEAK_THRESHOLD 80
 	
 	struct peak_stat pstat;
 	uint16_t samples[PEAK_LAG];
 	
-	peak_stat_init(&pstat, PEAK_THRESHOLD, 0, PEAK_LAG, PEAK_TRAINING, samples);
-	
-	/* while(1) {
-		uint16_t adc_val = adc_read();
-		
-		if(peak_detect(&pstat, adc_val))
-			vcp_printf("Peak: %u\n", adc_val);
-	} */
+	peak_stat_init(pstat, PEAK_THRESHOLD, 0, PEAK_LAG, samples);
 	
 	while(1) {
+		uint16_t adc_val = adc_read();
+		
+		// vcp_printf("ADC: %d\n", adc_val);
+		
+		if(peak_detect(pstat, adc_val)) {
+			uint16_t average = pstat.sample_sum / pstat.elements;
+			vcp_printf("Peak: %u, Average: %u, Diff: %u\n",
+				adc_val, average, adc_val - average);
+			
+			peak_stat_reset(pstat);
+		}
+	}
+	
+	/* while(1) {
 		uint32_t t = millis();
 		
 		for(int i = 0; i < 1000000; i++) {
@@ -108,5 +114,5 @@ int main() {
 		uint32_t t2 = millis();
 		
 		vcp_printf("time = %u ms\n", t2 - t);
-	}
+	} */
 }
