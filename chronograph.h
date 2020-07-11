@@ -2,6 +2,9 @@
 #define CHRONOGRAPH_H
 
 #include <libopencm3/stm32/adc.h>
+#include <core/types.h>
+
+// -------------------------------------------------
 
 // Verbose Output
 #define DEBUG
@@ -32,5 +35,25 @@
 
 // Used to convert m/s to fps
 #define MPS_TO_FPS_FACTOR ((float) 3.2808398950131);
+
+// -------------------------------------------------
+
+typedef enum {
+	mode_fps,
+	mode_mps,
+	mode_joule,
+	mode_rps
+} chrono_mode_t;
+
+typedef struct {
+	chrono_mode_t mode;
+	int weight;
+	
+	float measurement;
+	int count;
+	
+	float m_sum;
+	float m_sqsum;
+} chrono_stats_t;
 
 #endif

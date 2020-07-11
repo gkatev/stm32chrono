@@ -8,6 +8,7 @@
 #include <core/millis.h>
 
 #include "chronograph.h"
+#include "display.h"
 #include "peak.h"
 
 // --------------------------------------------
@@ -48,7 +49,9 @@ int main() {
 	gpio_adc_init();
 	adc_init();
 	
-	chrono();
+	// chrono();
+	
+	display_test();
 	
 	// extern void test();
 	// test();
@@ -67,7 +70,7 @@ void chrono() {
 	vcp_printf("Measuring!\n");
 	
 	while(1) {
-		uint16_t timer_val, adc_val;
+		uint16_t ticks, adc_val;
 		
 		if(state == timeout_s) {
 			adc_channel(CHANNEL_FRONT);
@@ -78,13 +81,15 @@ void chrono() {
 			#endif
 		}
 		
-		timer_val = timer_read();
+		ticks = timer_read();
 		adc_val = adc_read();
 		
 		if(!peak_detect(pstat, adc_val))
 			continue;
 		
 		/* Peak detected */
+		
+		peak_stat_reset(pstat);
 		
 		if(state == front_s) {
 			timer_start();
@@ -98,12 +103,17 @@ void chrono() {
 		} else if(state == back_s) {
 			timer_stop();
 			
-			float fps = calc_fps(timer_val);
-			vcp_printf("FPS = %f\n", fps);
+			float fps = calc_fps(ticks);
+			vcp_printf("FPS = %d\n", fps);
+			
+			adc_channel(CHANNEL_FRONT);
+			state = front_s;
 		}
-		
-		peak_stat_reset(pstat);
 	}
+}
+
+void chrono_new_measurement(float measurement) {
+	
 }
 
 float calc_fps(uint16_t ticks) {
