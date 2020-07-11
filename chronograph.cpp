@@ -28,6 +28,7 @@ void timer_start();
 void timer_stop();
 
 void chrono();
+void chrono_stat_update(chrono_stat_t& stat, float measurement);
 float calc_fps(uint16_t ticks);
 
 // --------------------------------------------
@@ -49,20 +50,22 @@ int main() {
 	gpio_adc_init();
 	adc_init();
 	
-	// chrono();
+	timer_init();
+	display_init();
 	
-	display_test();
-	
-	// extern void test();
-	// test();
+	chrono();
 }
 
 void chrono() {
-	struct peak_stat pstat;
 	uint16_t samples[PEAK_LAG];
+	peak_stat_t peak_stat;
+	chrono_stat_t chrono_stat;
 	
-	peak_stat_init(pstat, PEAK_THRESHOLD,
+	peak_stat_init(peak_stat, PEAK_THRESHOLD,
 		PEAK_INFLUENCE, PEAK_LAG, samples);
+	
+	chrono_stat = {.mode = mode_fps, .weight = 20};
+	display_draw_stat(chrono_stat);
 	
 	adc_channel(CHANNEL_FRONT);
 	state = front_s;
@@ -84,12 +87,12 @@ void chrono() {
 		ticks = timer_read();
 		adc_val = adc_read();
 		
-		if(!peak_detect(pstat, adc_val))
+		if(!peak_detect(peak_stat, adc_val))
 			continue;
 		
 		/* Peak detected */
 		
-		peak_stat_reset(pstat);
+		peak_stat_reset(peak_stat);
 		
 		if(state == front_s) {
 			timer_start();
@@ -104,7 +107,10 @@ void chrono() {
 			timer_stop();
 			
 			float fps = calc_fps(ticks);
-			vcp_printf("FPS = %d\n", fps);
+			vcp_printf("FPS = %d\n", (int) fps);
+			
+			chrono_stat_update(chrono_stat, fps);
+			display_draw_stat(chrono_stat);
 			
 			adc_channel(CHANNEL_FRONT);
 			state = front_s;
@@ -112,8 +118,12 @@ void chrono() {
 	}
 }
 
-void chrono_new_measurement(float measurement) {
+void chrono_stat_update(chrono_stat_t& stat, float measurement) {
+	stat.measurement = measurement;
+	stat.count++;
 	
+	stat.m_sum += measurement;
+	stat.m_sqsum += measurement*measurement;
 }
 
 float calc_fps(uint16_t ticks) {
@@ -130,93 +140,11 @@ float calc_fps(uint16_t ticks) {
 	float fps = speed * MPS_TO_FPS_FACTOR;
 	
 	#ifdef DEBUG
-		vcp_printf("ticks: %u dt(us): %u U(m/s): %f U(fps): %f\n",
-			ticks, dt_us, speed, fps);
+		vcp_printf("ticks: %u dt(us): %u U(m/s): %u U(fps): %u\n",
+			ticks, (int) dt_us, (int) speed, (int) fps);
 	#endif
 	
 	return fps;
-}
-
-void test() {
-	/* while(1) {
-		uint32_t t = millis();
-		
-		for(int i = 0; i < 1000000; i++) {
-			uint32_t val = adc_read();
-		}
-		
-		uint32_t t2 = millis();
-		
-		vcp_printf("time = %u ms\n", t2 - t);
-	} */
-	
-	/* uint32_t last_adc = 0xFFFFFFFF;
-	
-	while(1) {
-		uint32_t adc_val = adc_read();
-		
-		if(adc_val != last_adc) {
-			vcp_printf("ADC: %u\n", adc_val);
-			last_adc = adc_val;
-		}
-	} */
-	
-	/* while(1) {
-		uint16_t adc_val = adc_read();
-		
-		// vcp_printf("ADC: %d\n", adc_val);
-		
-		if(peak_detect(pstat, adc_val)) {
-			uint16_t average = pstat.sample_sum / pstat.elements;
-			vcp_printf("Peak: %u, Average: %u, Diff: %u\n",
-				adc_val, average, adc_val - average);
-			
-			peak_stat_reset(pstat);
-		}
-	} */
-	
-	/* while(1) {
-		uint32_t t = millis();
-		
-		for(int i = 0; i < 1000000; i++) {
-			uint16_t adc_val = adc_read();
-			peak_detect(pstat, adc_val);
-			
-			// if(adc_val > 10000000)
-				// vcp_printf("FAKE");
-		}
-		
-		uint32_t t2 = millis();
-		
-		vcp_printf("time = %u ms\n", t2 - t);
-	} */
-	
-	/* timer_init();
-	
-	vcp_printf("starting\n");
-	
-	while(true) {
-		state = front_s;
-		
-		timer_enable_counter(TIM2);
-		uint32_t t = millis();
-		
-		// while(state != timeout_s) {}
-		
-		while(state != timeout_s) {
-			if(millis() - t > 200) {
-				timer_stop();
-				delay_ms(200);
-				timer_start();
-				
-				while(state != timeout_s);
-			}
-		}
-		
-		uint32_t t2 = millis();
-		
-		vcp_printf("time = %u ms\n", t2 - t);
-	} */
 }
 
 // --------------------------------------------

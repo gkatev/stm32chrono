@@ -10,11 +10,10 @@ typedef enum {
 	ALIGN_RIGHT
 } DISPLAY_ALIGNMENT;
 
+void display_init();
+
 void display_write_aligned(uint8_t y, const char *str, FontDef font,
 	DISPLAY_ALIGNMENT alignment = ALIGN_LEFT);
-
-void display_draw_stats(chrono_stats_t stats);
-
-void display_test();
+void display_draw_stat(chrono_stat_t stats);
 
 #endif

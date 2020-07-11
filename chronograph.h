@@ -25,7 +25,7 @@
 #define TIMER_FREQ ((int) 30e06)
 
 // Convert timer ticks to micro seconds
-#define TICKS_TO_US(ticks) ((float) (ticks) / TIMER_FREQ / 1e06)
+#define TICKS_TO_US(ticks) ((float) (ticks) * 1e06 / TIMER_FREQ)
 
 // Distance of diodes (10^-6 m)
 #define DISTANCE_UM 30000
@@ -54,6 +54,8 @@ typedef struct {
 	
 	float m_sum;
 	float m_sqsum;
-} chrono_stats_t;
+} chrono_stat_t;
+
+// -------------------------------------------------
 
 #endif

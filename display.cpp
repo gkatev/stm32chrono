@@ -11,6 +11,8 @@
 #include <core/usb_vcp.h>
 #include <core/UART.h>
 
+// -------------------------------------------------
+
 static float stdev(int count, float sum, float sqsum) {
 	return count ? sqrt((float) (count*sqsum - sum*sum) / (count * count)) : 0;
 }
@@ -18,6 +20,12 @@ static float stdev(int count, float sum, float sqsum) {
 static int fract_part(float num, int points) {
 	int div = pow(10, points);
 	return (int) (num * div) % div;
+}
+
+// -------------------------------------------------
+
+void display_init() {
+	ssd1306_Init();
 }
 
 void display_write_aligned(uint8_t y, const char *str, FontDef font,
@@ -35,18 +43,14 @@ void display_write_aligned(uint8_t y, const char *str, FontDef font,
 	ssd1306_WriteString(str, font, White);
 }
 
-void display_init() {
-	ssd1306_Init();
-}
-
-void display_draw_stats(chrono_stats_t stats) {
-	float deviation = stdev(stats.count, stats.m_sum, stats.m_sqsum);
-	float average = (float) stats.m_sum / stats.count;
+void display_draw_stat(chrono_stat_t stat) {
+	float deviation = stdev(stat.count, stat.m_sum, stat.m_sqsum);
+	float average = (float) stat.m_sum / stat.count;
 	
 	const char *mode_str, *unit_str;
 	char buffer[129];
 	
-	switch(stats.mode) {
+	switch(stat.mode) {
 		case mode_fps: mode_str = "fps"; unit_str = "fps"; break;
 		case mode_mps: mode_str = "mps"; unit_str = "m/s"; break;
 		case mode_joule: mode_str = "joule"; unit_str = "J"; break;
@@ -54,54 +58,27 @@ void display_draw_stats(chrono_stats_t stats) {
 		default: mode_str = "?"; unit_str = "?";
 	}
 	
-	mini_snprintf(buffer, 128, "%s | .%d", mode_str, stats.weight);
+	mini_snprintf(buffer, 129, "%s | .%d", mode_str, stat.weight);
 	display_write_aligned(0, buffer, Font_6x8, ALIGN_LEFT);
 	
-	mini_snprintf(buffer, 128, "%02d", stats.count);
+	mini_snprintf(buffer, 129, "%02d", stat.count);
 	display_write_aligned(0, buffer, Font_6x8, ALIGN_RIGHT);
 	
-	mini_snprintf(buffer, 128, "%d.%02d",
-		(int) stats.measurement, fract_part(stats.measurement, 2));
+	if(stat.count)
+		mini_snprintf(buffer, 129, "%d.%02d",
+			(int) stat.measurement, fract_part(stat.measurement, 2));
+	else
+		mini_snprintf(buffer, 129, "---");
+	
 	display_write_aligned(20, buffer, Font_11x18, ALIGN_CENTER);
 	
-	mini_snprintf(buffer, 128, "Average: %d.%02d %s",
+	mini_snprintf(buffer, 129, "Average: %d.%02d %s",
 		(int) average, fract_part(average, 2), unit_str);
 	display_write_aligned(48, buffer, Font_6x8, ALIGN_CENTER);
 	
-	mini_snprintf(buffer, 128, "Deviation: %d.%02d %s",
+	mini_snprintf(buffer, 129, "Deviation: %d.%02d %s",
 		(int) deviation, fract_part(deviation, 2), unit_str);
 	display_write_aligned(56, buffer, Font_6x8, ALIGN_CENTER);
 	
 	ssd1306_UpdateScreen();
-}
-
-void display_test() {
-	display_init();
-	
-	display_draw_stats({
-		.mode = mode_fps,
-		.weight = 28,
-		.measurement = 315.67,
-		.count = 6,
-		.m_sum = 1878,
-		.m_sqsum = 588008,
-	});
-	
-	while(1);
-	
-	/* display_write_aligned(0, "fps | .20", Font_6x8, ALIGN_LEFT);
-	// display_write_aligned(0, "fps .20", Font_6x8, ALIGN_LEFT);
-	// display_write_aligned(0, "fps", Font_6x8, ALIGN_LEFT);
-	// display_write_aligned(0, ".20", Font_6x8, ALIGN_CENTER);
-	// display_write_aligned(8, ".20", Font_6x8, ALIGN_LEFT);
-	display_write_aligned(0, "03", Font_6x8, ALIGN_RIGHT);
-	
-	display_write_aligned(20, "320.41", Font_11x18, ALIGN_CENTER);
-	
-	display_write_aligned(48, "Average: 328.73 fps", Font_6x8, ALIGN_CENTER);
-	display_write_aligned(56, "Deviation: 2.45 fps", Font_6x8, ALIGN_CENTER);
-	
-	ssd1306_UpdateScreen();
-	
-	while(1); */
 }

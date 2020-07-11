@@ -36,7 +36,7 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
-struct peak_stat {
+typedef struct {
 	uint threshold;
 	uint influence;
 	uint lag;
@@ -46,12 +46,12 @@ struct peak_stat {
 	
 	uint16_t *samples;
 	ulong sample_sum;
-};
+} peak_stat_t;
 
-inline void peak_stat_init(struct peak_stat &s, uint threshold,
+inline void peak_stat_init(peak_stat_t &s, uint threshold,
 		uint influence, uint lag, uint16_t *samples) {
 	
-	s = (struct peak_stat) {
+	s = {
 		.threshold = threshold,
 		.influence = influence,
 		.lag = lag,
@@ -64,13 +64,13 @@ inline void peak_stat_init(struct peak_stat &s, uint threshold,
 	};
 }
 
-inline void peak_stat_reset(struct peak_stat &s) {
+inline void peak_stat_reset(peak_stat_t &s) {
 	s.elements = 0;
 	s.oldest = 0;
 	s.sample_sum = 0;
 }
 
-inline bool peak_detect(struct peak_stat &s, uint16_t value) {
+inline bool peak_detect(peak_stat_t &s, uint16_t value) {
 	uint16_t new_value = value;
 	bool has_peak = false;
 	
