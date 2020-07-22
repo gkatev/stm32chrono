@@ -7,16 +7,21 @@
 // -------------------------------------------------
 
 // Verbose Output
-#define DEBUG
+// #define DEBUG
+#ifdef DEBUG
+	#define DEBUG_PRINTF(...) vcp_printf(__VA_ARGS__)
+#else
+	#define DEBUG_PRINTF(...) ;
+#endif
 
 // Photodiode ADC channels
 #define CHANNEL_FRONT ADC_CHANNEL0
 #define CHANNEL_REAR ADC_CHANNEL1
 
 // Peak Detection
-#define PEAK_LAG 64
+#define PEAK_LAG 50
 #define PEAK_THRESHOLD 80
-#define PEAK_INFLUENCE 0
+#define PEAK_INFLUENCE 1
 
 // Max ticks measured = TIMER_ARR
 // Max time measured = TIMER_ARR/TIMER_FREQ

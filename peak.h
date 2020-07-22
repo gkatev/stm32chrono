@@ -23,6 +23,10 @@
  * Inline peak detection, no pointer(s), O2: 1.68 us
  *
  * Os -> O2, size increased from ~9kB to ~10kB
+ *
+ * ADC settings for these tests:
+ *   RCC_CFGR_ADCPRE_PCLK2_DIV2
+ *   ADC_SMPR_SMP_1DOT5CYC
  * 
  */
 

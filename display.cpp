@@ -58,6 +58,8 @@ void display_draw_stat(chrono_stat_t stat) {
 		default: mode_str = "?"; unit_str = "?";
 	}
 	
+	ssd1306_Fill(Black);
+	
 	mini_snprintf(buffer, 129, "%s | .%d", mode_str, stat.weight);
 	display_write_aligned(0, buffer, Font_6x8, ALIGN_LEFT);
 	
