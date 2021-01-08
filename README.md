@@ -1,4 +1,6 @@
-# Work in progress!
+# stm32chrono
+
+**Work in progress!**
 
 This is code I've developed for an STM32-based (STM32F103) Airsoft (or other?) chronograph.  
 There are still some issues to iron out, but it is in a working state.
